@@ -122,7 +122,7 @@ class TicTacToeBoard(tk.Tk):
     display_frame.pack(fill=tk.X)
     self.display = tk.Label(
       master=display_frame,
-      text="Ready?",
+      text=f"{self.game.current_player.label}'s turn",
       font=font.Font(size=28, weight="bold"),
     )
     self.display.pack()
@@ -151,9 +151,18 @@ class TicTacToeBoard(tk.Tk):
     clicked_button = event.widget
     row, col = self.cells[clicked_button]
     if self.game.is_valid_move(row, col):
-      self.game.current_state[row][col] = 'X'
+      self.game.current_state[row][col] = self.game.current_player.label
+      self.update_button(clicked_button)
+
+      print(self.game.is_end())
+
       self.game.toggle_player()
       self.update_display(msg=f"{self.game.current_player.label}'s turn")
+      print(self.game.current_state)
+
+  def update_button(self, clicked_button):
+    clicked_button.config(text=self.game.current_player.label)
+    clicked_button.config(fg=self.game.current_player.color)
 
   def update_display(self, msg, color="black"):
     self.display['text'] = msg
