@@ -18,21 +18,15 @@ PLAYERS = (
 )
 
 class TicTacToeGame:
-  def __init__(self):
+  def __init__(self, difficulty):
     self.players = cycle(PLAYERS)
     self.board_size = 3
     self.current_player = next(self.players)
-    self.winner_combo = []
-    self.current_state = []
     self.has_winner = False
-    # self.winning_combos = []
-    self.setup_board()
-
-  def setup_board(self):
+    self.difficulty = difficulty
     self.current_state = [['.', '.', '.'],
                           ['.', '.', '.'],
                           ['.', '.', '.']]
-    # self.winning_combos = self.get_winning_combos()
 
   def is_valid_move(self, row, col):
     # Check if move is valid
@@ -43,19 +37,25 @@ class TicTacToeGame:
     else:
         return True
 
-  def minimax(S, d, ig):
+  def minimax_alphabeta(S, d, alpha, beta, ig):
     if d == 0:
       return()  #return h(S)
 
     if ig == True:
       val = float('-inf')
       for i in 5:
-        val = max(val, TicTacToeGame.minimax(S, d-1, False)) #S'
+        val = max(val, TicTacToeGame.minimax_alphabeta(S, d-1, False)) #S'
+        alpha = max(alpha, val)
+        if val >= beta:
+          break
       return val  
     else:
       val = float('inf')
       for i in 5:
-        val = min(val, TicTacToeGame.minimax(S, d-1, True)) #S'
+        val = min(val, TicTacToeGame.minimax_alphabeta(S, d-1, True)) #S'
+        beta = min(beta, val)
+        if val <= alpha:
+          break
       return val
 
   def toggle_player(self):
@@ -96,7 +96,15 @@ class TicTacToeGame:
                 return None
 
     # It's a tie!
-    return '.'  
+    return '.'
+
+  def reset_game(self):    
+    self.current_player = next(self.players)
+    self.current_state = [['.', '.', '.'],
+                          ['.', '.', '.'],
+                          ['.', '.', '.']]
+    self.has_winner = False
+
 
 class TicTacToeBoard(tk.Tk):
   def __init__(self, game):
@@ -104,7 +112,7 @@ class TicTacToeBoard(tk.Tk):
     self.title("Tic-Tac-Toe Game")
     self.cells = {}
     self.game = game
-    self.create_menu
+    self.create_menu()
     self.create_board_display()
     self.create_board_grid()
 
@@ -148,17 +156,23 @@ class TicTacToeBoard(tk.Tk):
         button.grid(row=row, column=col, padx=5, pady=5, sticky="nsew")
 
   def handle_move(self, event):
-    clicked_button = event.widget
-    row, col = self.cells[clicked_button]
-    if self.game.is_valid_move(row, col):
-      self.game.current_state[row][col] = self.game.current_player.label
-      self.update_button(clicked_button)
+    if(self.game.has_winner != True):
+      clicked_button = event.widget
+      row, col = self.cells[clicked_button]
+      if self.game.is_valid_move(row, col):
+        self.game.current_state[row][col] = self.game.current_player.label
+        self.update_button(clicked_button)
 
-      print(self.game.is_end())
-
-      self.game.toggle_player()
-      self.update_display(msg=f"{self.game.current_player.label}'s turn")
-      print(self.game.current_state)
+        # check if game is finished
+        result = self.game.is_end()
+        if(result == None):
+          self.game.toggle_player()
+          self.update_display(msg=f"{self.game.current_player.label}'s turn")
+        elif(result == '.'):
+          self.update_display(msg='Draw!')
+        else:
+          self.update_display(msg=f"{self.game.current_player.label} wins!")  
+          self.game.has_winner = True
 
   def update_button(self, clicked_button):
     clicked_button.config(text=self.game.current_player.label)
@@ -168,10 +182,18 @@ class TicTacToeBoard(tk.Tk):
     self.display['text'] = msg
     self.display['fg'] = color
 
+  def reset_board(self):
+    self.game.reset_game()
+    self.update_display(msg=f"{self.game.current_player.label}'s turn")
+    for button in self.cells.keys():
+      button.config(highlightbackground='lightblue')
+      button.config(text='')
+      button.config(fg='black')
+
 
 def main():
     """Create the game's board and run its main loop."""
-    game = TicTacToeGame()
+    game = TicTacToeGame(5)
     board = TicTacToeBoard(game)
     board.mainloop()
 
