@@ -98,7 +98,7 @@ class TicTacToeGame:
     # It's a tie!
     return '.'
 
-  def reset_game(self):    
+  def reset_game(self):
     self.current_player = next(self.players)
     self.current_state = [['.', '.', '.'],
                           ['.', '.', '.'],
@@ -117,13 +117,22 @@ class TicTacToeBoard(tk.Tk):
     self.create_board_grid()
 
   def create_menu(self):
-    menu_bar = tk.Menu(master=self)
+    menu_bar = tk.Menu(master = self)
     self.config(menu=menu_bar)
-    file_menu = tk.Menu(master=menu_bar)
+    file_menu = tk.Menu(master = menu_bar)
     file_menu.add_command(label="Play Again", command=self.reset_board)
     file_menu.add_separator()
     file_menu.add_command(label="Exit", command=quit)
-    menu_bar.add_cascade(label="File", menu=file_menu)  
+    menu_bar.add_cascade(label="File", menu=file_menu)
+
+    radio_option = tk.IntVar(None, self.game.difficulty)
+
+    difficulty_menu = tk.Menu(master = menu_bar)
+    difficulty_menu.add_radiobutton(label="Easy", variable=radio_option, value=3)
+    difficulty_menu.add_radiobutton(label="Medium", variable=radio_option, value=5)
+    difficulty_menu.add_radiobutton(label="Hard", variable=radio_option, value=7)
+    menu_bar.add_cascade(label='Difficulty', menu=difficulty_menu)
+    radio_option.set(5)
 
   def create_board_display(self):
     display_frame = tk.Frame(master=self)
