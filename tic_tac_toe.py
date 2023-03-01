@@ -17,6 +17,24 @@ PLAYERS = (
   Player(label='O', color='red')
 )
 
+heuristic_array = {
+  {0, -1 , -10, -100},
+  {1, 0, 0, 0},
+  {10, 0, 0, 0},
+  {100, 0, 0, 0} 
+}
+
+winning_positions = {
+  { 0, 1, 2 },
+  { 3, 4, 5 },
+  { 6, 7, 8 },
+  { 0, 3, 6 },
+  { 1, 4, 7 },
+  { 2, 5, 8 },
+  { 0, 4, 8 },
+  { 2, 4, 6 }
+}
+
 class TicTacToeGame:
   def __init__(self, difficulty):
     self.players = cycle(PLAYERS)
@@ -37,14 +55,14 @@ class TicTacToeGame:
     else:
         return True
 
-  def minimax_alphabeta(S, d, alpha, beta, ig):
+  def minimax_alphabeta(self, S, d, alpha, beta, ig): # returns heuristic value and next state
     if d == 0:
-      return()  #return h(S)
+      return self.hev(S), S  #return h(S)
 
     if ig == True:
       val = float('-inf')
       for i in 5:
-        val = max(val, TicTacToeGame.minimax_alphabeta(S, d-1, False)) #S'
+        val = max(val, self.minimax_alphabeta(S, d-1, False)) #S'
         alpha = max(alpha, val)
         if val >= beta:
           break
@@ -52,11 +70,83 @@ class TicTacToeGame:
     else:
       val = float('inf')
       for i in 5:
-        val = min(val, TicTacToeGame.minimax_alphabeta(S, d-1, True)) #S'
+        val = min(val, self.minimax_alphabeta(S, d-1, True)) #S'
         beta = min(beta, val)
         if val <= alpha:
           break
       return val
+    
+  def max(self):
+    row, col = None
+    tmpMax = -2
+
+    # -1 for loss, 1 for win and 0 for a tie
+    result = self.is_end()
+    if result == 'X':
+      return (-1, 0, 0)
+    elif result == 'O':
+      return (1, 0, 0)
+    elif result == '.':
+      return (0, 0, 0)
+    
+    for i in range(0, 3):
+       for j in range(0, 3):
+          if self.current_state[i][j] == '.':
+            self.current_state[i][j] = 'O'
+            # check this move
+            (m, min_i, min_j) = self.min()
+            if m > tmpMax:
+              tmpMax = m
+              row = i
+              col = j
+            self.current_state[i][j] = '.'
+    return (tmpMax, row, col)
+
+  def min(self):     
+    row, col = None
+    tmpMin = 2
+
+     # -1 for loss, 1 for win and 0 for a tie
+    result = self.is_end()
+    if result == 'X':
+      return (-1, 0, 0)
+    elif result == 'O':
+      return (1, 0, 0)
+    elif result == '.':
+      return (0, 0, 0)
+    
+    for i in range(0, 3):
+       for j in range(0, 3):
+          if self.current_state[i][j] == '.':
+            self.current_state[i][j] = 'X'
+            # check this move
+            (m, max_i, max_j) = self.max()
+            if m < tmpMin:
+              tmpMin = m
+              row = i
+              col = j
+            self.current_state[i][j] = '.'
+    return (tmpMin, row, col)
+  
+  def is_leaf(state):
+    for i in range(0, 9):
+      if(state[i] == '.'): return False
+    return True
+  
+  def hev(self, cells):
+    opponent = next(self.current_player)
+    heuristic = 0
+
+    for i in range(0,8):
+      player_count = opponent_count = 0 
+      for j in range(0,3):
+        move = cells[winning_positions[i][j]]
+        if (move == self.current_player): player_count += 1
+        elif (move == opponent): opponent_count += 1
+      heuristic += heuristic_array[player_count][opponent_count]
+
+    return heuristic  
+    
 
   def toggle_player(self):
     self.current_player = next(self.players)
